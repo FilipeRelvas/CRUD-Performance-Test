@@ -111,7 +111,7 @@ namespace CRUDPerformanceTest
             switch (createOperationType)
             {
                 case 0: // Create
-                    log.Info("Selected Operation: Create");
+                    log.Info("Selected operation: Create");
                     bool isOob = DetermineEntityType(serviceProxy); 
                     Tuple<EntityMetadata, Entity> entityTuple = ListEntities(serviceProxy, isOob);
                     DetermineCreateOperationType(serviceProxy, serviceProxyOptions, serviceManager, entityTuple);
@@ -179,7 +179,7 @@ namespace CRUDPerformanceTest
                 // Check the chosen entity number and extract the entity metadata object
                 string response = Console.ReadLine();
                 EntityMetadata entityMetadata = entitiesMetadata[int.Parse(response)];
-                log.InfoFormat("Selected Entity: {0}", entityMetadata.LogicalName);
+                log.InfoFormat("Selected entity: {0}", entityMetadata.LogicalName);
 
                 var queryExpression = new QueryExpression(entityMetadata.LogicalName)
                 {
