@@ -12,10 +12,10 @@
 // ==========================================================================
 using System;
 using System.ServiceModel;
+using System.Configuration;
 using System.IdentityModel.Tokens;
 using System.ServiceModel.Security;
 using Microsoft.Pfe.Xrm;
-using System.Configuration;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Client;
 using Microsoft.Xrm.Sdk.Query;
@@ -36,8 +36,8 @@ namespace CRUDPerformanceTest
             OrganizationServiceProxy serviceProxy = null;
             OrganizationServiceManager serviceManager = null;
 
-            int timeoutInMinutes = int.Parse(ConfigurationManager.AppSettings["timeoutinminutes"]);
-            int defaultConnectionLimit = int.Parse(ConfigurationManager.AppSettings["defaultconnectionlimit"]);
+            int timeoutInMinutes = int.Parse(ConfigurationManager.AppSettings["TimeoutInMinutes"]);
+            int defaultConnectionLimit = int.Parse(ConfigurationManager.AppSettings["DefaultConnectionLimit"]);
 
             // Allows .NET to run multiple threads https://msdn.microsoft.com/en-us/library/system.net.servicepointmanager.defaultconnectionlimit(v=vs.110).aspx
             System.Net.ServicePointManager.DefaultConnectionLimit = defaultConnectionLimit;
@@ -160,8 +160,8 @@ namespace CRUDPerformanceTest
         /// <returns>A Tuple with the EntityMetadata and Entity object from the chosen Entity.</returns>
         private static Tuple<EntityMetadata, Entity> ListEntities(OrganizationServiceProxy serviceProxy, bool isOob)
         {
-            string[] oobEntities = ConvertEntityStringToList("oobentities");
-            string[] customEntities = ConvertEntityStringToList("customentities");
+            string[] oobEntities = ConvertEntityStringToList("OobEntities");
+            string[] customEntities = ConvertEntityStringToList("CustomEntities");
 
             EntityMetadata[] entitiesMetadata = RetrieveEntityMetadata(serviceProxy, (isOob ? oobEntities : customEntities), isOob);
 
@@ -252,8 +252,8 @@ namespace CRUDPerformanceTest
         /// <param name="entityTuple"></param>
         private static void DetermineCreateOperationType(OrganizationServiceProxy serviceProxy, OrganizationServiceProxyOptions serviceProxyOptions, OrganizationServiceManager serviceManager, Tuple<EntityMetadata, Entity> entityTuple)
         {
-            int totalRequestBatches = int.Parse(ConfigurationManager.AppSettings["totalrequestbatches"]);
-            int totalRequestsPerBatch = int.Parse(ConfigurationManager.AppSettings["totalrequestsperbatch"]);
+            int totalRequestBatches = int.Parse(ConfigurationManager.AppSettings["TotalRequestBatches"]);
+            int totalRequestsPerBatch = int.Parse(ConfigurationManager.AppSettings["TotalRequestsPerBatch"]);
 
             Console.WriteLine("\nThe following create operation types are available: ");
 
@@ -289,14 +289,14 @@ namespace CRUDPerformanceTest
         {
             Console.WriteLine("(App Settings)\n");
 
-            log.InfoFormat("OOB Entities: {0}", ConfigurationManager.AppSettings["oobentities"]);
-            log.InfoFormat("Custom Entities: {0}", ConfigurationManager.AppSettings["customentities"]);
+            log.InfoFormat("OOB Entities: {0}", ConfigurationManager.AppSettings["OobEntities"]);
+            log.InfoFormat("Custom Entities: {0}", ConfigurationManager.AppSettings["CustomEntities"]);
 
-            log.InfoFormat("Timeout In Minutes: {0}", ConfigurationManager.AppSettings["timeoutinminutes"]);
-            log.InfoFormat("Default Connection Limit: {0}", ConfigurationManager.AppSettings["defaultconnectionlimit"]);
+            log.InfoFormat("Timeout In Minutes: {0}", ConfigurationManager.AppSettings["TimeoutInMinutes"]);
+            log.InfoFormat("Default Connection Limit: {0}", ConfigurationManager.AppSettings["DefaultConnectionLimit"]);
 
-            log.InfoFormat("Total Request Batches: {0}", ConfigurationManager.AppSettings["totalrequestbatches"]);
-            log.InfoFormat("Total Requests Per Batch: {0}", ConfigurationManager.AppSettings["totalrequestsperbatch"]);       
+            log.InfoFormat("Total Request Batches: {0}", ConfigurationManager.AppSettings["TotalRequestBatches"]);
+            log.InfoFormat("Total Requests Per Batch: {0}", ConfigurationManager.AppSettings["TotalRequestsPerBatch"]);       
         }
 
         /// <summary>

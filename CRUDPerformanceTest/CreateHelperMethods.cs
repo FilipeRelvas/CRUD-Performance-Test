@@ -1,4 +1,16 @@
-﻿using System;
+﻿// ==========================================================================
+//  Copyright (C) Microsoft Corporation.  All rights reserved.
+//
+//  This source code is intended only as a supplement to Microsoft
+//  Development Tools and/or on-line documentation.  See these other
+//  materials for detailed information regarding Microsoft code samples.
+//
+//  THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+//  KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+//  IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+//  PARTICULAR PURPOSE.
+// ==========================================================================
+using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.Pfe.Xrm;
@@ -22,7 +34,7 @@ namespace CRUDPerformanceTest
         public static List<Guid> CreateExecuteSingle(OrganizationServiceProxy serviceProxy, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
             Console.WriteLine();
-            log.Info("Create Mode: Execute Single...");
+            log.Info("Create Mode: Execute Single");
             log.InfoFormat("Creating {0} records...", totalRequestBatches * totalRequestsPerBatch);
 
             double totalSeconds = 0.0;
@@ -49,7 +61,7 @@ namespace CRUDPerformanceTest
                 CreateResponse response = (CreateResponse)serviceProxy.Execute(mRequest);
                 sw.Stop();
 
-                log.InfoFormat("Request Id: {0} for record number: {1}", i, mRequest.RequestId);
+                log.InfoFormat("Request Id for record number {0}: {1}", i, mRequest.RequestId);
                 log.InfoFormat("Seconds to create record number {0}: {1}s", i, sw.Elapsed.TotalSeconds);
                 totalSeconds = totalSeconds + sw.Elapsed.TotalSeconds;
                 sw.Reset();
@@ -65,11 +77,11 @@ namespace CRUDPerformanceTest
         /// <param name="serviceProxy"></param>
         /// <param name="entityTuple"></param>
         /// <returns></returns>
-        public static List<Guid> CreateExecuteMultiple(OrganizationServiceProxy serviceProxy, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestPerBatch)
+        public static List<Guid> CreateExecuteMultiple(OrganizationServiceProxy serviceProxy, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
             Console.WriteLine();
-            log.Info("Create Mode: Execute Multiple...");
-            log.InfoFormat("Creating {0} records...", totalRequestBatches * totalRequestPerBatch);
+            log.Info("Create Mode: Execute Multiple");
+            log.InfoFormat("Creating {0} records...", totalRequestBatches * totalRequestsPerBatch);
          
             ExecuteMultipleRequest executeMultipleRequest = new ExecuteMultipleRequest()
             {
@@ -89,7 +101,7 @@ namespace CRUDPerformanceTest
 
             for (int i = 0; i < totalRequestBatches; i++)
             {
-                for (int j = 0; j < totalRequestPerBatch; j++)
+                for (int j = 0; j < totalRequestsPerBatch; j++)
                 {
                     Guid? preAssignedId = null;
                     preAssignedId = Guid.NewGuid();
@@ -113,15 +125,15 @@ namespace CRUDPerformanceTest
                 sw.Stop();
 
                 totalSeconds = totalSeconds + sw.Elapsed.TotalSeconds;
-                log.InfoFormat("Request Id: {0} for batch number {1}", executeMultipleRequest.RequestId, i);
-                log.InfoFormat("Seconds to create {0} records for batch number {1}: {2}s", totalRequestPerBatch, i, sw.Elapsed.TotalSeconds);
+                log.InfoFormat("Request Id for request batch number {0}: {1}", i, executeMultipleRequest.RequestId);
+                log.InfoFormat("Seconds to create {0} records for request batch number {1}: {2}s", totalRequestsPerBatch, i, sw.Elapsed.TotalSeconds);
 
                 sw.Reset();
                 executeMultipleRequest.Requests.Clear();
                 executeMultipleRequest.RequestId = Guid.NewGuid();
             }
 
-            log.InfoFormat("Seconds to create {0} records: {1}s", totalRequestBatches * totalRequestPerBatch, totalSeconds);
+            log.InfoFormat("Seconds to create {0} records: {1}s", totalRequestBatches * totalRequestsPerBatch, totalSeconds);
             return ids;
         }
 
@@ -135,7 +147,7 @@ namespace CRUDPerformanceTest
         public static List<Guid> CreateParallelExecuteMultiple(OrganizationServiceManager serviceManager, OrganizationServiceProxyOptions serviceProxyOptions, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
             Console.WriteLine();
-            log.Info("Create Mode: Parallel Execute Multiple...");
+            log.Info("Create Mode: Parallel Execute Multiple");
             log.InfoFormat("Creating {0} records...", totalRequestBatches * totalRequestsPerBatch);
          
             List<Guid> ids = new List<Guid>();
@@ -171,7 +183,7 @@ namespace CRUDPerformanceTest
                     executeMultipleRequest.Requests.Add(mRequest);
                 }
                 requests.Add(new KeyValuePair<string, ExecuteMultipleRequest>(i.ToString(), executeMultipleRequest));
-                log.InfoFormat("Request Id: {0} for request batch number {1}", executeMultipleRequest.RequestId, i);
+                log.InfoFormat("Request Id for request batch number {0}: {1}", i, executeMultipleRequest.RequestId);
             }
 
             Stopwatch sw = new Stopwatch();
@@ -180,9 +192,9 @@ namespace CRUDPerformanceTest
             // Parallel execution of all ExecuteMultipleRequest in the requests Dictionary
             IDictionary<string, ExecuteMultipleResponse> responseForCreateRecords = serviceManager.ParallelProxy.Execute<ExecuteMultipleRequest, ExecuteMultipleResponse>(requests, serviceProxyOptions);
             int threadsCount = Process.GetCurrentProcess().Threads.Count;
-            log.InfoFormat("Number of threads used: {0}", threadsCount);
-
             sw.Stop();
+
+            log.InfoFormat("Number of threads used: {0}", threadsCount);
             log.InfoFormat("Seconds to create {0} records: {1}s", totalRequestBatches * totalRequestsPerBatch, sw.Elapsed.TotalSeconds);
       
             return ids;
