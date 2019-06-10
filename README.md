@@ -20,7 +20,7 @@ response times, when performing operations such as:
   
   ```xml
   <appSettings>
-		<add key="OobEntities" value="Account,Contact,Lead,Opportunity,Incident" />	<!-- List the OOB entities by separating them with commas (,) -->
+		<add key="OobEntities" value="Account,Contact,Lead,Opportunity,Incident" /> <!-- List the OOB entities by separating them with commas (,) -->
 		<add key="CustomEntities" value="" /> <!-- List the custom entities by separating them with commas (,) -->
 		<add key="TimeoutInMinutes" value="2" />
 		<add key="DefaultConnectionLimit" value="2" />
