@@ -30,6 +30,8 @@ namespace CRUDPerformanceTest
         /// </summary>
         /// <param name="serviceProxy"></param>
         /// <param name="entityTuple"></param>
+        /// <param name="totalRequestBatches"></param>
+        /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
         public static List<Guid> CreateExecuteSingle(OrganizationServiceProxy serviceProxy, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
@@ -37,7 +39,7 @@ namespace CRUDPerformanceTest
             log.Info("Create Mode: Execute Single");
             log.InfoFormat("Creating {0} records...", totalRequestBatches * totalRequestsPerBatch);
 
-            double totalSeconds = 0.0;
+            double totalSeconds = 0.0d;
 
             Stopwatch sw = new Stopwatch();
             List<Guid> ids = new List<Guid>();
@@ -48,7 +50,7 @@ namespace CRUDPerformanceTest
                 preAssignedId = Guid.NewGuid();
 
                 ids.Add(preAssignedId.Value);
-                Entity entity = CreateEntity(entityTuple, i, preAssignedId);
+                Entity entity = CreateEntity(entityTuple, preAssignedId);
 
                 CreateRequest mRequest = new CreateRequest()
                 {
@@ -76,6 +78,8 @@ namespace CRUDPerformanceTest
         /// </summary>
         /// <param name="serviceProxy"></param>
         /// <param name="entityTuple"></param>
+        /// <param name="totalRequestBatches"></param>
+        /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
         public static List<Guid> CreateExecuteMultiple(OrganizationServiceProxy serviceProxy, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
@@ -94,7 +98,7 @@ namespace CRUDPerformanceTest
                 RequestId = Guid.NewGuid()
             };
 
-            double totalSeconds = 0.0;
+            double totalSeconds = 0.0d;
 
             Stopwatch sw = new Stopwatch();
             List<Guid> ids = new List<Guid>();
@@ -107,7 +111,7 @@ namespace CRUDPerformanceTest
                     preAssignedId = Guid.NewGuid();
 
                     ids.Add(preAssignedId.Value);
-                    Entity entity = CreateEntity(entityTuple, i, preAssignedId);
+                    Entity entity = CreateEntity(entityTuple, preAssignedId);
 
                     CreateRequest mRequest = new CreateRequest()
                     {
@@ -137,12 +141,15 @@ namespace CRUDPerformanceTest
             return ids;
         }
 
+
         /// <summary>
         /// Executes multiple creates concurrently within one or more Batches, with each Batch limited to 1000 records.
         /// </summary>
         /// <param name="serviceManager"></param>
         /// <param name="serviceProxyOptions"></param>
         /// <param name="entityTuple"></param>
+        /// <param name="totalRequestBatches"></param>
+        /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
         public static List<Guid> CreateParallelExecuteMultiple(OrganizationServiceManager serviceManager, OrganizationServiceProxyOptions serviceProxyOptions, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
@@ -172,7 +179,7 @@ namespace CRUDPerformanceTest
                     preAssignedId = Guid.NewGuid();
 
                     ids.Add(preAssignedId.Value);
-                    var entity = CreateEntity(entityTuple, j, preAssignedId);
+                    Entity entity = CreateEntity(entityTuple, preAssignedId);
 
                     CreateRequest mRequest = new CreateRequest()
                     {
@@ -207,7 +214,7 @@ namespace CRUDPerformanceTest
         /// <param name="index"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        private static Entity CreateEntity(Tuple<EntityMetadata, Entity> entityTuple, int index, Guid? id)
+        private static Entity CreateEntity(Tuple<EntityMetadata, Entity> entityTuple, Guid? id)
         {
             Entity entity = new Entity(entityTuple.Item2.LogicalName);
 
@@ -217,7 +224,7 @@ namespace CRUDPerformanceTest
             }
 
             entity.Attributes.Add(entityTuple.Item1.PrimaryIdAttribute, id.Value);
-            entity.Attributes.Add(entityTuple.Item1.PrimaryNameAttribute, entityTuple.Item2.LogicalName + (index + 1));
+            entity.Attributes.Add(entityTuple.Item1.PrimaryNameAttribute, entityTuple.Item2.LogicalName + " " + id.ToString());
 
             return entity;
         }
