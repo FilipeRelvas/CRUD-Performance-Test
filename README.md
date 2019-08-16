@@ -7,7 +7,18 @@ response times, when performing operations such as:
 - Update;
 - Delete.
 
-<b>Pre-Release v1.0:</b>
+<b>Release v1.1:</b>
+- Added Retrieve Operation through FetchXML:
+  - Generate the XML through CRM or a 3rd Party Tool and paste it directly in the console when asked;
+- Added Delete Operation through FetchXML:
+  - Generate the XML through CRM or a 3rd Party Tool and paste it directly in the console when asked;
+  - Function is executed through the Parallel Execute Multiple implementation;
+  - It takes into account the values defined for TotalRequestsPerBatch to calculate the number of Batches needed.
+- Updated the Application Logging to take Retrieve and Delete;
+- Updated microsoft.identitymodel.clients.activedirectory from 5.1.0 to 5.2.0;
+- Updated the Entity Create name to use GUID in order to avoid repetitions or duplicates;
+
+<b>Release v1.0:</b>
 - Server Configuration allows for a straight forward instance configuration;
 - Create Operation is available with 3 different implementations:
   - Execute Single;
