@@ -261,7 +261,7 @@ namespace CRUDPerformanceTest
         private static string[] ConvertEntityStringToList(string appSetting)
         {
             string entityString = ConfigurationManager.AppSettings[appSetting].Trim();
-            return entityString.Split(',');
+            return entityString.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }
