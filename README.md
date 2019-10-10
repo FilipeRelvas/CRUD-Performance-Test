@@ -7,6 +7,32 @@ response times, when performing operations such as:
 - Update;
 - Delete.
 
+<b>Release v1.2:</b>
+- Added Update Operation through FetchXML:
+  - Generate the XML through CRM or a 3rd Party Tool and paste it directly in the console when asked;
+- Update Operation will take the Attributes from the FetchXML or from the AppConfig through the AttributesToUpdate app setting (check below);
+  - <b>Note</b>: Currently we only support Attributes of type String (Single Line of Text, Muti Line of Text...);
+- Updated CrmSdk to the latest version:
+  - Microsoft.CrmSdk.CoreAssemblies to 9.0.2.18;
+  - Microsoft.CrmSdk.Deployment to 9.0.2.18;
+  - Microsoft.CrmSdk.Workflow to 9.0.2.18.
+- Modified the Log App Settings function to dynamically log with the addition or removal of new AppSettings;
+- Minor string fixes regarding the options / information presented in the screen;
+- <b>Update:</b> Application configuration can be defined through the project AppConfig file:
+
+ ```xml
+  <appSettings>
+		<add key="AttributesToUpdate" value="" /> <!-- List the attributes to be updated by separating them with commas (,) -->
+		<add key="OobEntities" value="Account,Contact,Lead,Opportunity,Incident" />	<!-- List the OOB entities by separating them with commas (,) -->
+		<add key="CustomEntities" value="" /> <!-- List the custom entities by separating them with commas (,) -->
+		<add key="TimeoutInMinutes" value="2" />
+		<add key="DefaultConnectionLimit" value="2" />
+		<add key="TotalRequestBatches" value="2" />
+		<add key="TotalRequestsPerBatch" value="20" /> <!-- Limited to 1000 (Batch Size) -->
+	</appSettings>
+  ```
+
+
 <b>Release v1.1:</b>
 - Added Retrieve Operation through FetchXML:
   - Generate the XML through CRM or a 3rd Party Tool and paste it directly in the console when asked;
@@ -17,6 +43,7 @@ response times, when performing operations such as:
 - Updated the Application Logging to take Retrieve and Delete;
 - Updated microsoft.identitymodel.clients.activedirectory from 5.1.0 to 5.2.0;
 - Updated the Entity Create name to use GUID in order to avoid repetitions or duplicates;
+
 
 <b>Release v1.0:</b>
 - Server Configuration allows for a straight forward instance configuration;
