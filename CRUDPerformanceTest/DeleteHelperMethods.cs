@@ -54,8 +54,7 @@ namespace CRUDPerformanceTest
 
             Console.WriteLine();
             log.Info("Delete Mode: Parallel Execute Multiple");
-            log.InfoFormat("Deleting {0} records...", recordsToBeDeletedCount);
-
+           
             List<Guid> ids = new List<Guid>();
             IDictionary<string, ExecuteMultipleRequest> requests = new Dictionary<string, ExecuteMultipleRequest>();
 
@@ -95,8 +94,9 @@ namespace CRUDPerformanceTest
                 batchSize = 0;
                 requests.Add(new KeyValuePair<string, ExecuteMultipleRequest>(i.ToString(), executeMultipleRequest));
                 log.InfoFormat("Request Id for request batch number {0}: {1}", i, executeMultipleRequest.RequestId);
-            }        
-        
+            }
+            log.InfoFormat("Deleting {0} record(s)...", recordsToBeDeletedCount);
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -106,7 +106,7 @@ namespace CRUDPerformanceTest
             sw.Stop();
 
             log.InfoFormat("Number of threads used: {0}", threadsCount);
-            log.InfoFormat("Seconds to delete {0} records: {1}s", recordsToBeDeletedCount, sw.Elapsed.TotalSeconds);
+            log.InfoFormat("Seconds to delete {0} record(s): {1}s", recordsToBeDeletedCount, sw.Elapsed.TotalSeconds);
  
             return ids;
         }

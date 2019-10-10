@@ -113,13 +113,15 @@ namespace CRUDPerformanceTest
                     Tuple<EntityMetadata, Entity> entityTuple = RetrieveHelperMethods.RetrieveEntityList(serviceProxy, isOob);
                     DetermineCreateOperationType(serviceProxy, serviceProxyOptions, serviceManager, entityTuple);
                     break;
-                case 1:
+                case 1: // Retrieve
                     log.Info("Selected operation: Retrieve");
                     DetermineRetrieveOperationType(serviceProxy, serviceProxyOptions, serviceManager);
                     break;
-                case 2: //TODO: Update
+                case 2: // Update
+                    log.Info("Selected operation: Update");
+                    DetermineUpdateOperationType(serviceProxy, serviceProxyOptions, serviceManager);
                     break;
-                case 3:
+                case 3: // Delete
                     log.Info("Selected operation: Delete");
                     DetermineDeleteOperationType(serviceProxy, serviceProxyOptions, serviceManager);
                     break;
@@ -193,6 +195,35 @@ namespace CRUDPerformanceTest
         }
 
         /// <summary>
+        /// Determines which update operation should be performed: Parallel Execute Multiple | FetchXML.
+        /// </summary>
+        /// <param name="serviceProxy"></param>
+        /// <param name="serviceProxyOptions"></param>
+        /// <param name="serviceManager"></param>
+        /// <param name="entityTuple"></param>
+        private static void DetermineUpdateOperationType(OrganizationServiceProxy serviceProxy, OrganizationServiceProxyOptions serviceProxyOptions, OrganizationServiceManager serviceManager)
+        {
+            int totalRequestsPerBatch = int.Parse(ConfigurationManager.AppSettings["TotalRequestsPerBatch"]);
+
+            Console.WriteLine("\nThe following update operation types are available: ");
+            Console.WriteLine("(0) Parallel Execute Multiple | FetchXML");
+            
+            Console.Write("Specify the desired update operation type: ");
+            string response = Console.ReadLine();
+            int updateOperationType = int.Parse(response);
+
+            switch (updateOperationType)
+            {
+                case 0: // Execute Single
+                    UpdateHelperMethods.UpdateFetchXml(serviceProxy, serviceManager, serviceProxyOptions, totalRequestsPerBatch);
+                    break;
+                default:
+                    throw new InvalidOperationException("The specified update operation type is not valid: " + response);
+            }
+            return;
+        }
+
+        /// <summary>
         /// Determines which retrieve operation should be performed: Retrieve Multiple | FetchXML.
         /// </summary>
         /// <param name="serviceProxy"></param>
@@ -253,14 +284,16 @@ namespace CRUDPerformanceTest
         {
             Console.WriteLine("(App Settings)\n");
 
-            log.InfoFormat("OOB Entities: {0}", ConfigurationManager.AppSettings["OobEntities"]);
-            log.InfoFormat("Custom Entities: {0}", ConfigurationManager.AppSettings["CustomEntities"]);
+            foreach (string key in ConfigurationManager.AppSettings.AllKeys)
+            {
+                string value = ConfigurationManager.AppSettings[key];
 
-            log.InfoFormat("Timeout In Minutes: {0}", ConfigurationManager.AppSettings["TimeoutInMinutes"]);
-            log.InfoFormat("Default Connection Limit: {0}", ConfigurationManager.AppSettings["DefaultConnectionLimit"]);
-
-            log.InfoFormat("Total Request Batches: {0}", ConfigurationManager.AppSettings["TotalRequestBatches"]);
-            log.InfoFormat("Total Requests Per Batch: {0}", ConfigurationManager.AppSettings["TotalRequestsPerBatch"]);       
+                if (value.Equals(string.Empty) || value == null)
+                {
+                    value = "{}";
+                }
+                log.InfoFormat(key + ": {0}", value);
+            }
         }
         
         /// Handle a thrown exception.

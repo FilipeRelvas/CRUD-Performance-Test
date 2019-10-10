@@ -37,7 +37,7 @@ namespace CRUDPerformanceTest
         {
             Console.WriteLine();
             log.Info("Create Mode: Execute Single");
-            log.InfoFormat("Creating {0} records...", totalRequestBatches * totalRequestsPerBatch);
+            log.InfoFormat("Creating {0} record(s)...", totalRequestBatches * totalRequestsPerBatch);
 
             double totalSeconds = 0.0d;
 
@@ -69,7 +69,7 @@ namespace CRUDPerformanceTest
                 sw.Reset();
             }
 
-            log.InfoFormat("Seconds to create {0} records: {1}s", totalRequestBatches * totalRequestsPerBatch, totalSeconds);
+            log.InfoFormat("Seconds to create {0} record(s): {1}s", totalRequestBatches * totalRequestsPerBatch, totalSeconds);
             return ids;
         }
 
@@ -85,7 +85,7 @@ namespace CRUDPerformanceTest
         {
             Console.WriteLine();
             log.Info("Create Mode: Execute Multiple");
-            log.InfoFormat("Creating {0} records...", totalRequestBatches * totalRequestsPerBatch);
+            log.InfoFormat("Creating {0} record(s)...", totalRequestBatches * totalRequestsPerBatch);
          
             ExecuteMultipleRequest executeMultipleRequest = new ExecuteMultipleRequest()
             {
@@ -130,14 +130,14 @@ namespace CRUDPerformanceTest
 
                 totalSeconds = totalSeconds + sw.Elapsed.TotalSeconds;
                 log.InfoFormat("Request Id for request batch number {0}: {1}", i, executeMultipleRequest.RequestId);
-                log.InfoFormat("Seconds to create {0} records for request batch number {1}: {2}s", totalRequestsPerBatch, i, sw.Elapsed.TotalSeconds);
+                log.InfoFormat("Seconds to create {0} record(s) for request batch number {1}: {2}s", totalRequestsPerBatch, i, sw.Elapsed.TotalSeconds);
 
                 sw.Reset();
                 executeMultipleRequest.Requests.Clear();
                 executeMultipleRequest.RequestId = Guid.NewGuid();
             }
 
-            log.InfoFormat("Seconds to create {0} records: {1}s", totalRequestBatches * totalRequestsPerBatch, totalSeconds);
+            log.InfoFormat("Seconds to create {0} record(s): {1}s", totalRequestBatches * totalRequestsPerBatch, totalSeconds);
             return ids;
         }
 
@@ -155,7 +155,6 @@ namespace CRUDPerformanceTest
         {
             Console.WriteLine();
             log.Info("Create Mode: Parallel Execute Multiple");
-            log.InfoFormat("Creating {0} records...", totalRequestBatches * totalRequestsPerBatch);
          
             List<Guid> ids = new List<Guid>();
             IDictionary<string, ExecuteMultipleRequest> requests = new Dictionary<string, ExecuteMultipleRequest>();
@@ -192,6 +191,7 @@ namespace CRUDPerformanceTest
                 requests.Add(new KeyValuePair<string, ExecuteMultipleRequest>(i.ToString(), executeMultipleRequest));
                 log.InfoFormat("Request Id for request batch number {0}: {1}", i, executeMultipleRequest.RequestId);
             }
+            log.InfoFormat("Creating {0} record(s)...", totalRequestBatches * totalRequestsPerBatch);
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -202,7 +202,7 @@ namespace CRUDPerformanceTest
             sw.Stop();
 
             log.InfoFormat("Number of threads used: {0}", threadsCount);
-            log.InfoFormat("Seconds to create {0} records: {1}s", totalRequestBatches * totalRequestsPerBatch, sw.Elapsed.TotalSeconds);
+            log.InfoFormat("Seconds to create {0} record(s): {1}s", totalRequestBatches * totalRequestsPerBatch, sw.Elapsed.TotalSeconds);
       
             return ids;
         }

@@ -38,8 +38,8 @@ namespace CRUDPerformanceTest
         /// <returns>A Tuple with the EntityMetadata and Entity object from the chosen Entity.</returns>
         public static Tuple<EntityMetadata, Entity> RetrieveEntityList(OrganizationServiceProxy serviceProxy, bool isOob)
         {
-            string[] oobEntities = ConvertEntityStringToList("OobEntities");
-            string[] customEntities = ConvertEntityStringToList("CustomEntities");
+            string[] oobEntities = ConvertKeyStringToList("OobEntities");
+            string[] customEntities = ConvertKeyStringToList("CustomEntities");
 
             EntityMetadata[] entitiesMetadata = RetrieveEntityMetadata(serviceProxy, (isOob ? oobEntities : customEntities), isOob);
 
@@ -171,7 +171,7 @@ namespace CRUDPerformanceTest
                 sw.Stop();
 
                 log.InfoFormat("Request Id for request page number {0}: {1}", pageNumber, retrieveMultipleRequest.RequestId);
-                log.InfoFormat("Seconds to retrieve {0} records for page number {1}: {2}s", returnCollection.Entities.Count, pageNumber, sw.Elapsed.TotalSeconds);
+                log.InfoFormat("Seconds to retrieve {0} record(s) for page number {1}: {2}s", returnCollection.Entities.Count, pageNumber, sw.Elapsed.TotalSeconds);
                 totalSeconds = totalSeconds + sw.Elapsed.TotalSeconds;
                 sw.Reset();
 
@@ -192,7 +192,7 @@ namespace CRUDPerformanceTest
                 }
             }
 
-            log.InfoFormat("Seconds to retrieve {0} records: {1}s", retrievedRecords.Entities.Count, totalSeconds);
+            log.InfoFormat("Seconds to retrieve {0} record(s): {1}s", retrievedRecords.Entities.Count, totalSeconds);
             return retrievedRecords;
         }
 
@@ -254,11 +254,11 @@ namespace CRUDPerformanceTest
         }
 
         /// <summary>
-        /// Retrieves the entity schema name contained in the App.config string.
+        /// Retrieves the key string value contained in the App.config as a string array.
         /// </summary>
         /// <param name="entityString"></param>
         /// <returns></returns>
-        private static string[] ConvertEntityStringToList(string appSetting)
+        public static string[] ConvertKeyStringToList(string appSetting)
         {
             string entityString = ConfigurationManager.AppSettings[appSetting].Trim();
             return entityString.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
