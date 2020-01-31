@@ -15,9 +15,9 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.Pfe.Xrm;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Client;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Tooling.Connector;
 
 namespace CRUDPerformanceTest
 {
@@ -28,12 +28,12 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Executes single create requests.
         /// </summary>
-        /// <param name="serviceProxy"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="entityTuple"></param>
         /// <param name="totalRequestBatches"></param>
         /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
-        public static List<Guid> CreateExecuteSingle(OrganizationServiceProxy serviceProxy, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
+        public static List<Guid> CreateExecuteSingle(CrmServiceClient serviceClient, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
             Console.WriteLine();
             log.Info("Create Mode: Execute Single");
@@ -46,7 +46,7 @@ namespace CRUDPerformanceTest
 
             for (int i = 0; i < (totalRequestBatches * totalRequestsPerBatch); i++)
             {
-                Guid? preAssignedId = null;
+                Guid? preAssignedId;
                 preAssignedId = Guid.NewGuid();
 
                 ids.Add(preAssignedId.Value);
@@ -60,12 +60,12 @@ namespace CRUDPerformanceTest
                 mRequest.Parameters.Add("SuppressDuplicateDetection", true); // Disable duplicate detection 
 
                 sw.Start();
-                CreateResponse response = (CreateResponse)serviceProxy.Execute(mRequest);
+                CreateResponse response = (CreateResponse)serviceClient.Execute(mRequest);
                 sw.Stop();
 
                 log.InfoFormat("Request Id for record number {0}: {1}", i, mRequest.RequestId);
                 log.InfoFormat("Seconds to create record number {0}: {1}s", i, sw.Elapsed.TotalSeconds);
-                totalSeconds = totalSeconds + sw.Elapsed.TotalSeconds;
+                totalSeconds += sw.Elapsed.TotalSeconds;
                 sw.Reset();
             }
 
@@ -76,12 +76,12 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Executes multiple creates within one or more batches, with each batch limited to 1000 records.
         /// </summary>
-        /// <param name="serviceProxy"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="entityTuple"></param>
         /// <param name="totalRequestBatches"></param>
         /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
-        public static List<Guid> CreateExecuteMultiple(OrganizationServiceProxy serviceProxy, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
+        public static List<Guid> CreateExecuteMultiple(CrmServiceClient serviceClient, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
             Console.WriteLine();
             log.Info("Create Mode: Execute Multiple");
@@ -107,7 +107,7 @@ namespace CRUDPerformanceTest
             {
                 for (int j = 0; j < totalRequestsPerBatch; j++)
                 {
-                    Guid? preAssignedId = null;
+                    Guid? preAssignedId;
                     preAssignedId = Guid.NewGuid();
 
                     ids.Add(preAssignedId.Value);
@@ -121,14 +121,12 @@ namespace CRUDPerformanceTest
                     mRequest.Parameters.Add("SuppressDuplicateDetection", true); // Disable duplicate detection 
                     executeMultipleRequest.Requests.Add(mRequest);
                 }
-
-                OrganizationResponse responseForCreateRecords = null;
-
+                
                 sw.Start();
-                responseForCreateRecords = (ExecuteMultipleResponse)serviceProxy.Execute(executeMultipleRequest);
+                OrganizationResponse responseForCreateRecords = (ExecuteMultipleResponse)serviceClient.Execute(executeMultipleRequest);
                 sw.Stop();
 
-                totalSeconds = totalSeconds + sw.Elapsed.TotalSeconds;
+                totalSeconds += sw.Elapsed.TotalSeconds;
                 log.InfoFormat("Request Id for request batch number {0}: {1}", i, executeMultipleRequest.RequestId);
                 log.InfoFormat("Seconds to create {0} record(s) for request batch number {1}: {2}s", totalRequestsPerBatch, i, sw.Elapsed.TotalSeconds);
 
@@ -146,12 +144,11 @@ namespace CRUDPerformanceTest
         /// Executes multiple creates concurrently within one or more Batches, with each Batch limited to 1000 records.
         /// </summary>
         /// <param name="serviceManager"></param>
-        /// <param name="serviceProxyOptions"></param>
         /// <param name="entityTuple"></param>
         /// <param name="totalRequestBatches"></param>
         /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
-        public static List<Guid> CreateParallelExecuteMultiple(OrganizationServiceManager serviceManager, OrganizationServiceProxyOptions serviceProxyOptions, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
+        public static List<Guid> CreateParallelExecuteMultiple(OrganizationServiceManager serviceManager, Tuple<EntityMetadata, Entity> entityTuple, int totalRequestBatches, int totalRequestsPerBatch)
         {
             Console.WriteLine();
             log.Info("Create Mode: Parallel Execute Multiple");
@@ -174,7 +171,7 @@ namespace CRUDPerformanceTest
 
                 for (int j = 0; j < totalRequestsPerBatch; j++)
                 {
-                    Guid? preAssignedId = null;
+                    Guid? preAssignedId;
                     preAssignedId = Guid.NewGuid();
 
                     ids.Add(preAssignedId.Value);
@@ -197,7 +194,7 @@ namespace CRUDPerformanceTest
             sw.Start();
 
             // Parallel execution of all ExecuteMultipleRequest in the requests Dictionary
-            IDictionary<string, ExecuteMultipleResponse> responseForCreateRecords = serviceManager.ParallelProxy.Execute<ExecuteMultipleRequest, ExecuteMultipleResponse>(requests, serviceProxyOptions);
+            IDictionary<string, ExecuteMultipleResponse> responseForCreateRecords = serviceManager.ParallelProxy.Execute<ExecuteMultipleRequest, ExecuteMultipleResponse>(requests);
             int threadsCount = Process.GetCurrentProcess().Threads.Count;
             sw.Stop();
 

@@ -17,9 +17,8 @@ using System.IdentityModel.Tokens;
 using System.ServiceModel.Security;
 using Microsoft.Pfe.Xrm;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Client;
-using Microsoft.Crm.Sdk.Samples;
 using Microsoft.Xrm.Sdk.Metadata;
+using Microsoft.Xrm.Tooling.Connector;
 
 namespace CRUDPerformanceTest
 {
@@ -27,12 +26,12 @@ namespace CRUDPerformanceTest
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        static void Main(string[] args)
+        static void Main()
         {
             // The connection to the Organization web service.
-            OrganizationServiceProxy serviceProxy = null;
-            OrganizationServiceManager serviceManager = null;
-
+            CrmServiceClient serviceClient = null;
+            OrganizationServiceManager serviceManager;
+            
             int timeoutInMinutes = int.Parse(ConfigurationManager.AppSettings["TimeoutInMinutes"]);
             int defaultConnectionLimit = int.Parse(ConfigurationManager.AppSettings["DefaultConnectionLimit"]);
 
@@ -41,25 +40,15 @@ namespace CRUDPerformanceTest
 
             try
             {
-                // Obtain the target organization's web address and client logon credentials
-                // from the user by using a helper class.
-                ServerConnection serverConnect = new ServerConnection();
-                ServerConnection.Configuration config = serverConnect.GetServerConfiguration();
-
-                // Establish an authenticated connection to the Organization web service. 
-                serviceProxy = new OrganizationServiceProxy(config.OrganizationUri, config.HomeRealmUri, config.Credentials, config.DeviceCredentials)
-                {
-                    Timeout = new TimeSpan(0, timeoutInMinutes, 0)
-                };
-
-                var serviceProxyOptions = new OrganizationServiceProxyOptions()
-                {
-                    Timeout = new TimeSpan(0, timeoutInMinutes, 0)
-                };
-                serviceManager = new OrganizationServiceManager(config.OrganizationUri, config.Credentials.UserName.UserName, config.Credentials.UserName.Password);
+                // Establish an authenticated connection to Crm.
+                string connectionString = ConfigurationManager.ConnectionStrings["CrmConnect"].ConnectionString;
+                
+                CrmServiceClient.MaxConnectionTimeout = new TimeSpan(0, timeoutInMinutes, 0);
+                serviceClient = new CrmServiceClient(connectionString);          
+                serviceManager = new OrganizationServiceManager(serviceClient);
 
                 LogAppSettings(); // Display App Settings
-                DetermineOperationType(serviceProxy, serviceProxyOptions, serviceManager);
+                DetermineOperationType(serviceClient, serviceManager);
                
                 Console.WriteLine();
                 Console.WriteLine("Completed!");
@@ -78,7 +67,7 @@ namespace CRUDPerformanceTest
             finally
             {
                 // Always dispose the service object to close the service connection and free resources.
-                if (serviceProxy != null) serviceProxy.Dispose();
+                if (serviceClient != null) serviceClient.Dispose();
 
                 Console.WriteLine("Press <Enter> to exit.");
                 Console.ReadLine();
@@ -88,10 +77,9 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Determines the operation type to be performed: Create, Update or Delete.
         /// </summary>
-        /// <param name="serviceProxy"></param>
-        /// <param name="serviceProxyOptions"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="serviceManager"></param>
-        private static void DetermineOperationType(OrganizationServiceProxy serviceProxy, OrganizationServiceProxyOptions serviceProxyOptions, OrganizationServiceManager serviceManager)
+        private static void DetermineOperationType(CrmServiceClient serviceClient, OrganizationServiceManager serviceManager)
         {
             Console.WriteLine("\nThe following operation types are available: ");
 
@@ -109,21 +97,21 @@ namespace CRUDPerformanceTest
             {
                 case 0: // Create
                     log.Info("Selected operation: Create");
-                    bool isOob = DetermineEntityType(serviceProxy); 
-                    Tuple<EntityMetadata, Entity> entityTuple = RetrieveHelperMethods.RetrieveEntityList(serviceProxy, isOob);
-                    DetermineCreateOperationType(serviceProxy, serviceProxyOptions, serviceManager, entityTuple);
+                    bool isOob = DetermineEntityType(); 
+                    Tuple<EntityMetadata, Entity> entityTuple = RetrieveHelperMethods.RetrieveEntityList(serviceClient, isOob);
+                    DetermineCreateOperationType(serviceClient, serviceManager, entityTuple);
                     break;
                 case 1: // Retrieve
                     log.Info("Selected operation: Retrieve");
-                    DetermineRetrieveOperationType(serviceProxy, serviceProxyOptions, serviceManager);
+                    DetermineRetrieveOperationType(serviceClient);
                     break;
                 case 2: // Update
                     log.Info("Selected operation: Update");
-                    DetermineUpdateOperationType(serviceProxy, serviceProxyOptions, serviceManager);
+                    DetermineUpdateOperationType(serviceClient, serviceManager);
                     break;
                 case 3: // Delete
                     log.Info("Selected operation: Delete");
-                    DetermineDeleteOperationType(serviceProxy, serviceProxyOptions, serviceManager);
+                    DetermineDeleteOperationType(serviceClient, serviceManager);
                     break;
                 default:
                     throw new InvalidOperationException("The specified operation type is not valid: " + response);
@@ -134,9 +122,8 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Determines the entity type by asking the user (y/n), with "yes" being OOB entities and "no" custom entities.
         /// </summary>
-        /// <param name="serviceProxy"></param>
         /// <returns>True if OOB Entities and False if Custom Entity</returns>
-        private static bool DetermineEntityType(OrganizationServiceProxy serviceProxy)
+        private static bool DetermineEntityType()
         {
             Console.Write("\nDo you want to retrieve OOB Entities (y/n)? ");
             string response = Console.ReadLine();
@@ -158,11 +145,10 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Determines which create operation should be performed: Single, Execute Multiple or Parallel Execute Multiple.
         /// </summary>
-        /// <param name="serviceProxy"></param>
-        /// <param name="serviceProxyOptions"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="serviceManager"></param>
         /// <param name="entityTuple"></param>
-        private static void DetermineCreateOperationType(OrganizationServiceProxy serviceProxy, OrganizationServiceProxyOptions serviceProxyOptions, OrganizationServiceManager serviceManager, Tuple<EntityMetadata, Entity> entityTuple)
+        private static void DetermineCreateOperationType(CrmServiceClient serviceClient, OrganizationServiceManager serviceManager, Tuple<EntityMetadata, Entity> entityTuple)
         {
             int totalRequestBatches = int.Parse(ConfigurationManager.AppSettings["TotalRequestBatches"]);
             int totalRequestsPerBatch = int.Parse(ConfigurationManager.AppSettings["TotalRequestsPerBatch"]);
@@ -180,13 +166,13 @@ namespace CRUDPerformanceTest
             switch (createOperationType)
             {
                 case 0: // Execute Single
-                    CreateHelperMethods.CreateExecuteSingle(serviceProxy, entityTuple, totalRequestBatches, totalRequestsPerBatch);
+                    CreateHelperMethods.CreateExecuteSingle(serviceClient, entityTuple, totalRequestBatches, totalRequestsPerBatch);
                     break;
                 case 1: // Execute Multiple
-                    CreateHelperMethods.CreateExecuteMultiple(serviceProxy, entityTuple, totalRequestBatches, totalRequestsPerBatch);
+                    CreateHelperMethods.CreateExecuteMultiple(serviceClient, entityTuple, totalRequestBatches, totalRequestsPerBatch);
                     break;
                 case 2: // Parallel Execute Multiple
-                    CreateHelperMethods.CreateParallelExecuteMultiple(serviceManager, serviceProxyOptions, entityTuple, totalRequestBatches, totalRequestsPerBatch);
+                    CreateHelperMethods.CreateParallelExecuteMultiple(serviceManager, entityTuple, totalRequestBatches, totalRequestsPerBatch);
                     break;
                 default:
                     throw new InvalidOperationException("The specified create operation type is not valid: " + response);
@@ -197,11 +183,9 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Determines which update operation should be performed: Parallel Execute Multiple | FetchXML.
         /// </summary>
-        /// <param name="serviceProxy"></param>
-        /// <param name="serviceProxyOptions"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="serviceManager"></param>
-        /// <param name="entityTuple"></param>
-        private static void DetermineUpdateOperationType(OrganizationServiceProxy serviceProxy, OrganizationServiceProxyOptions serviceProxyOptions, OrganizationServiceManager serviceManager)
+        private static void DetermineUpdateOperationType(CrmServiceClient serviceClient, OrganizationServiceManager serviceManager)
         {
             int totalRequestsPerBatch = int.Parse(ConfigurationManager.AppSettings["TotalRequestsPerBatch"]);
 
@@ -215,7 +199,7 @@ namespace CRUDPerformanceTest
             switch (updateOperationType)
             {
                 case 0: // Execute Single
-                    UpdateHelperMethods.UpdateFetchXml(serviceProxy, serviceManager, serviceProxyOptions, totalRequestsPerBatch);
+                    UpdateHelperMethods.UpdateFetchXml(serviceClient, serviceManager, totalRequestsPerBatch);
                     break;
                 default:
                     throw new InvalidOperationException("The specified update operation type is not valid: " + response);
@@ -226,10 +210,8 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Determines which retrieve operation should be performed: Retrieve Multiple | FetchXML.
         /// </summary>
-        /// <param name="serviceProxy"></param>
-        /// <param name="serviceProxyOptions"></param>
-        /// <param name="serviceManager"></param>
-        private static void DetermineRetrieveOperationType(OrganizationServiceProxy serviceProxy, OrganizationServiceProxyOptions serviceProxyOptions, OrganizationServiceManager serviceManager)
+        /// <param name="serviceClient"></param>
+        private static void DetermineRetrieveOperationType(CrmServiceClient serviceClient)
         {
             Console.WriteLine("\nThe following retrieve operation types are available: ");
             Console.WriteLine("(0) Retrieve Multiple | FetchXML");
@@ -241,7 +223,7 @@ namespace CRUDPerformanceTest
             switch (retrieveOperationType)
             {
                 case 0: // Retrieve Multiple | FetchXML
-                    RetrieveHelperMethods.RetrieveMultipleFetchXml(serviceProxy);
+                    RetrieveHelperMethods.RetrieveMultipleFetchXml(serviceClient);
                     break;
                 default:
                     throw new InvalidOperationException("The specified retrieve operation type is not valid: " + response);
@@ -252,10 +234,9 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Determines which delete operation should be performed: Execute Multiple | FetchXML.
         /// </summary>
-        /// <param name="serviceProxy"></param>
-        /// <param name="serviceProxyOptions"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="serviceManager"></param>
-        private static void DetermineDeleteOperationType(OrganizationServiceProxy serviceProxy, OrganizationServiceProxyOptions serviceProxyOptions, OrganizationServiceManager serviceManager)
+        private static void DetermineDeleteOperationType(CrmServiceClient serviceClient, OrganizationServiceManager serviceManager)
         {
             int totalRequestsPerBatch = int.Parse(ConfigurationManager.AppSettings["TotalRequestsPerBatch"]);
 
@@ -269,7 +250,7 @@ namespace CRUDPerformanceTest
             switch (deleteOperationType)
             {
                 case 0: // Parallel Execute Multiple | FetchXML
-                    DeleteHelperMethods.DeleteFetchXml(serviceProxy, serviceManager, serviceProxyOptions, totalRequestsPerBatch);
+                    DeleteHelperMethods.DeleteFetchXml(serviceClient, serviceManager, totalRequestsPerBatch);
                     break;
                 default:
                     throw new InvalidOperationException("The specified create operation type is not valid: " + response);

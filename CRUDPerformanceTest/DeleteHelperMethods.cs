@@ -15,8 +15,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.Pfe.Xrm;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Client;
 using Microsoft.Xrm.Sdk.Messages;
+using Microsoft.Xrm.Tooling.Connector;
 
 namespace CRUDPerformanceTest
 {
@@ -27,26 +27,24 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Executes multiple deletes concurrently within one or more Batches, with each batch limited to 1000 records, based on the provided FetchXML.
         /// </summary>
-        /// <param name="serviceProxy"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="serviceManager"></param>
-        /// <param name="serviceProxyOptions"></param>
         /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
-        public static List<Guid> DeleteFetchXml(OrganizationServiceProxy serviceProxy, OrganizationServiceManager serviceManager, OrganizationServiceProxyOptions serviceProxyOptions, int totalRequestsPerBatch)
+        public static List<Guid> DeleteFetchXml(CrmServiceClient serviceClient, OrganizationServiceManager serviceManager, int totalRequestsPerBatch)
         {
-            EntityCollection recordsToBeDeleted = RetrieveHelperMethods.RetrieveMultipleFetchXml(serviceProxy);
-            return DeleteParallelExecuteMultiple(serviceManager, serviceProxyOptions, recordsToBeDeleted, totalRequestsPerBatch);
+            EntityCollection recordsToBeDeleted = RetrieveHelperMethods.RetrieveMultipleFetchXml(serviceClient);
+            return DeleteParallelExecuteMultiple(serviceManager, recordsToBeDeleted, totalRequestsPerBatch);
         }
 
         /// <summary>
         /// Executes multiple deletes concurrently within one or more Batches, with each batch limited to 1000 records.
         /// </summary>
         /// <param name="serviceManager"></param>
-        /// <param name="serviceProxyOptions"></param>
         /// <param name="recordsToBeDeleted"></param>
         /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
-        public static List<Guid> DeleteParallelExecuteMultiple(OrganizationServiceManager serviceManager, OrganizationServiceProxyOptions serviceProxyOptions, EntityCollection recordsToBeDeleted, int totalRequestsPerBatch)
+        public static List<Guid> DeleteParallelExecuteMultiple(OrganizationServiceManager serviceManager, EntityCollection recordsToBeDeleted, int totalRequestsPerBatch)
         {
             int batchSize = 0;
             int recordsToBeDeletedCount = recordsToBeDeleted.Entities.Count;
@@ -101,7 +99,7 @@ namespace CRUDPerformanceTest
             sw.Start();
 
             // Parallel execution of all ExecuteMultipleRequest in the requests Dictionary
-            IDictionary<string, ExecuteMultipleResponse> responseForDeleteRecords = serviceManager.ParallelProxy.Execute<ExecuteMultipleRequest, ExecuteMultipleResponse>(requests, serviceProxyOptions);
+            IDictionary<string, ExecuteMultipleResponse> responseForDeleteRecords = serviceManager.ParallelProxy.Execute<ExecuteMultipleRequest, ExecuteMultipleResponse>(requests);
             int threadsCount = Process.GetCurrentProcess().Threads.Count;
             sw.Stop();
 

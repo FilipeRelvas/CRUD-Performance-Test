@@ -19,10 +19,10 @@ using System.Configuration;
 using System.Collections.Generic;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
-using Microsoft.Xrm.Sdk.Client;
 using Microsoft.Xrm.Sdk.Messages;
 using Microsoft.Xrm.Sdk.Metadata;
 using Microsoft.Xrm.Sdk.Metadata.Query;
+using Microsoft.Xrm.Tooling.Connector;
 
 namespace CRUDPerformanceTest
 {
@@ -33,15 +33,15 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Retrieves all OOB or Custom Entities depending on isOOB's value (True or False) and queries which one to choose.
         /// </summary>
-        /// <param name="serviceProxy"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="isOob"></param>
         /// <returns>A Tuple with the EntityMetadata and Entity object from the chosen Entity.</returns>
-        public static Tuple<EntityMetadata, Entity> RetrieveEntityList(OrganizationServiceProxy serviceProxy, bool isOob)
+        public static Tuple<EntityMetadata, Entity> RetrieveEntityList(CrmServiceClient serviceClient, bool isOob)
         {
             string[] oobEntities = ConvertKeyStringToList("OobEntities");
             string[] customEntities = ConvertKeyStringToList("CustomEntities");
 
-            EntityMetadata[] entitiesMetadata = RetrieveEntityMetadata(serviceProxy, (isOob ? oobEntities : customEntities), isOob);
+            EntityMetadata[] entitiesMetadata = RetrieveEntityMetadata(serviceClient, (isOob ? oobEntities : customEntities), isOob);
 
             if (entitiesMetadata != null && entitiesMetadata.Length > 0)
             {
@@ -65,11 +65,11 @@ namespace CRUDPerformanceTest
                     TopCount = 1
                 };
 
-                DataCollection<Entity> Entities = serviceProxy.RetrieveMultiple(queryExpression).Entities;
+                DataCollection<Entity> Entities = serviceClient.RetrieveMultiple(queryExpression).Entities;
 
                 if (Entities.Count > 0) // Check if we have any entity records for the selected entity
                 {
-                    Entity entity = serviceProxy.RetrieveMultiple(queryExpression).Entities[0];
+                    Entity entity = serviceClient.RetrieveMultiple(queryExpression).Entities[0];
                     return new Tuple<EntityMetadata, Entity>(entityMetadata, entity);
                 }
                 else
@@ -86,11 +86,11 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Retrieves all OOB or Custom Entities Metadata depending on isOOB's value (True or False).
         /// </summary>
-        /// <param name="serviceProxy"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="includedEntities"></param>
         /// <param name="isOOB"></param>
         /// <returns></returns>
-        public static EntityMetadata[] RetrieveEntityMetadata(OrganizationServiceProxy serviceProxy, string[] includedEntities, bool isOOB)
+        public static EntityMetadata[] RetrieveEntityMetadata(CrmServiceClient serviceClient, string[] includedEntities, bool isOOB)
         {
             MetadataFilterExpression EntityFilter = new MetadataFilterExpression(LogicalOperator.And);
 
@@ -117,16 +117,16 @@ namespace CRUDPerformanceTest
                 Query = entityQueryExpression
             };
 
-            RetrieveMetadataChangesResponse response = (RetrieveMetadataChangesResponse)serviceProxy.Execute(request);
+            RetrieveMetadataChangesResponse response = (RetrieveMetadataChangesResponse)serviceClient.Execute(request);
             return response.EntityMetadata.ToArray();
         }
 
         /// <summary>
         /// Executes a retrieve multiple based on the FetchXML copied from the command line.
         /// </summary>
-        /// <param name="serviceProxy"></param>
+        /// <param name="serviceClient"></param>
         /// <returns></returns>
-        public static EntityCollection RetrieveMultipleFetchXml(OrganizationServiceProxy serviceProxy)
+        public static EntityCollection RetrieveMultipleFetchXml(CrmServiceClient serviceClient)
         {
             int pageNumber = 1;
             int fetchMaxCount = 5000;
@@ -167,7 +167,7 @@ namespace CRUDPerformanceTest
                 };
 
                 sw.Start();
-                EntityCollection returnCollection = ((RetrieveMultipleResponse)serviceProxy.Execute(retrieveMultipleRequest)).EntityCollection;
+                EntityCollection returnCollection = ((RetrieveMultipleResponse)serviceClient.Execute(retrieveMultipleRequest)).EntityCollection;
                 sw.Stop();
 
                 log.InfoFormat("Request Id for request page number {0}: {1}", pageNumber, retrieveMultipleRequest.RequestId);

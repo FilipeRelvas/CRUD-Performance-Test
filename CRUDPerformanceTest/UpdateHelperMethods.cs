@@ -16,8 +16,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Microsoft.Pfe.Xrm;
 using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Client;
 using Microsoft.Xrm.Sdk.Messages;
+using Microsoft.Xrm.Tooling.Connector;
 
 namespace CRUDPerformanceTest
 {
@@ -28,26 +28,24 @@ namespace CRUDPerformanceTest
         /// <summary>
         /// Executes multiple updates concurrently within one or more Batches, with each batch limited to 1000 records, based on the provided FetchXML.
         /// </summary>
-        /// <param name="serviceProxy"></param>
+        /// <param name="serviceClient"></param>
         /// <param name="serviceManager"></param>
-        /// <param name="serviceProxyOptions"></param>
         /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
-        public static List<Guid> UpdateFetchXml(OrganizationServiceProxy serviceProxy, OrganizationServiceManager serviceManager, OrganizationServiceProxyOptions serviceProxyOptions, int totalRequestsPerBatch)
+        public static List<Guid> UpdateFetchXml(CrmServiceClient serviceClient, OrganizationServiceManager serviceManager, int totalRequestsPerBatch)
         {
-            EntityCollection recordsToBeUpdated = RetrieveHelperMethods.RetrieveMultipleFetchXml(serviceProxy);
-            return UpdateParallelExecuteMultiple(serviceManager, serviceProxyOptions, recordsToBeUpdated, totalRequestsPerBatch);
+            EntityCollection recordsToBeUpdated = RetrieveHelperMethods.RetrieveMultipleFetchXml(serviceClient);
+            return UpdateParallelExecuteMultiple(serviceManager, recordsToBeUpdated, totalRequestsPerBatch);
         }
 
         /// <summary>
         /// Executes multiple updates concurrently within one or more Batches, with each batch limited to 1000 records.
         /// </summary>
         /// <param name="serviceManager"></param>
-        /// <param name="serviceProxyOptions"></param>
         /// <param name="recordsToBeUpdated"></param>
         /// <param name="totalRequestsPerBatch"></param>
         /// <returns></returns>
-        public static List<Guid> UpdateParallelExecuteMultiple(OrganizationServiceManager serviceManager, OrganizationServiceProxyOptions serviceProxyOptions, EntityCollection recordsToBeUpdated, int totalRequestsPerBatch)
+        public static List<Guid> UpdateParallelExecuteMultiple(OrganizationServiceManager serviceManager, EntityCollection recordsToBeUpdated, int totalRequestsPerBatch)
         {
             int batchSize = 0;
             int recordsToBeUpdatedCount = recordsToBeUpdated.Entities.Count;
@@ -107,7 +105,7 @@ namespace CRUDPerformanceTest
             sw.Start();
 
             // Parallel execution of all ExecuteMultipleRequest in the requests Dictionary
-            IDictionary<string, ExecuteMultipleResponse> responseForUpdatedRecords = serviceManager.ParallelProxy.Execute<ExecuteMultipleRequest, ExecuteMultipleResponse>(requests, serviceProxyOptions);
+            IDictionary<string, ExecuteMultipleResponse> responseForUpdatedRecords = serviceManager.ParallelProxy.Execute<ExecuteMultipleRequest, ExecuteMultipleResponse>(requests);
             int threadsCount = Process.GetCurrentProcess().Threads.Count;
             sw.Stop();
 
