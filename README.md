@@ -7,6 +7,21 @@ response times, when performing operations such as:
 - Update;
 - Delete.
 
+<b>Release v2.0:</b>
+- Updated all the ADAL and CRM SDK DLLs to the latest version;
+- Updated PFE Xrm Core to the latest version;
+- Removed every reference for OrganizationServiceProxy;
+- Service connection is now made through the CrmServiceClient;
+- ServerConnection class was removed;
+- Connection String is now used and can be configured through the App.Config file.
+
+ ```xml
+   <connectionStrings>
+     <!-- Online using OAuth -->
+     <add name="CrmConnect" connectionString="AuthType=OAuth;Username=;Password=;Url=;AppId=51f81489-12ee-4a9e-aaae-a2591f45987d;RedirectUri=app://58145B91-0C36-4500-8554-080854F2AC97"/>
+   </connectionStrings>
+   ```
+
 <b>Release v1.2:</b>
 - Added Update Operation through FetchXML:
   - Generate the XML through CRM or a 3rd Party Tool and paste it directly in the console when asked;
