@@ -7,6 +7,7 @@ response times, when performing operations such as:
 - Update;
 - Delete.
 
+
 <b>Release v2.0:</b>
 - Updated all the ADAL and CRM SDK DLLs to the latest version;
 - Updated PFE Xrm Core to the latest version;
@@ -22,11 +23,12 @@ response times, when performing operations such as:
    </connectionStrings>
    ```
 
+
 <b>Release v1.2:</b>
 - Added Update Operation through FetchXML:
   - Generate the XML through CRM or a 3rd Party Tool and paste it directly in the console when asked;
 - Update Operation will take the Attributes from the FetchXML or from the AppConfig through the AttributesToUpdate app setting (check below);
-  - <b>Note</b>: Currently we only support Attributes of type String (Single Line of Text, Muti Line of Text...);
+  - <b>Note</b>: Currently we only support Attributes of type String (Single Line of Text, Multi Line of Text...);
 - Updated CrmSdk to the latest version:
   - Microsoft.CrmSdk.CoreAssemblies to 9.0.2.18;
   - Microsoft.CrmSdk.Deployment to 9.0.2.18;
@@ -38,7 +40,7 @@ response times, when performing operations such as:
  ```xml
   <appSettings>
 		<add key="AttributesToUpdate" value="" /> <!-- List the attributes to be updated by separating them with commas (,) -->
-		<add key="OobEntities" value="Account,Contact,Lead,Opportunity,Incident" />	<!-- List the OOB entities by separating them with commas (,) -->
+		<add key="OobEntities" value="Account,Contact,Lead,Opportunity,Incident" /> <!-- List the OOB entities by separating them with commas (,) -->
 		<add key="CustomEntities" value="" /> <!-- List the custom entities by separating them with commas (,) -->
 		<add key="TimeoutInMinutes" value="2" />
 		<add key="DefaultConnectionLimit" value="2" />
